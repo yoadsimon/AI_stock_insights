@@ -1,0 +1,14 @@
+pendulum
+pytz
+openai
+#playwright
+python-dotenv
+tqdm
+yfinance
+boto3
+pydub
+moviepy
+google-api-python-client
+google-auth
+google-auth-oauthlib
+Pillow==9.5.0

@@ -1,0 +1,120 @@
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python virtual environments
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# PyCharm project files
+.idea/
+*.iml
+
+# VSCode settings
+.vscode/
+
+# Pyre type checker
+.pyre/
+
+# MyPy type checker
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environments
+.env
+.env.*
+*.env
+
+# Flask instance folder
+instance/
+
+# Logs
+logs/
+**/logs/
+
+# Airflow logs and PID files
+airflow-webserver.pid
+airflow-scheduler.pid
+airflow-worker.pid
+airflow.pid
+
+# Airflow configuration
+airflow.cfg
+unittests.cfg
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+__pycache__/
+
+# Airflow compiled files
+dags/**/__pycache__/
+dags/**/*.py[cod]
+
+# Results and temporary files
+dags/common/results/
+dags/common/temp/
+dags/common/*.mp4
+dags/common/*.mp3
+
+# Ignore outputs
+/output/
+outputs/
+*.sql
+*.sqlite3
+*.db
+
+# Secret files
+**/secrets.*
+secrets.*
+token.json
+client_secrets.json
+**/token.json
+**/client_secrets.json
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker files
+*.pid
+*.swp
+*~
+
+/dags/common/inputs/
+dags/common/inputs/
