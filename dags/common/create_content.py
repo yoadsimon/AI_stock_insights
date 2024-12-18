@@ -15,7 +15,6 @@ def create_content(use_temp_file=False,
                    mock_data_input_now=None,
                    stock_symbol='NVDA',
                    company_name='NVIDIA Corporation') -> str:
-    logging.info("Starting stock market time check...")
     stock_market_time = StockMarketTime(mock_data_input_now)
     now_date = stock_market_time.now.strftime("%Y-%m-%d")
     file_name = f"{stock_symbol}_{now_date}"
@@ -24,17 +23,16 @@ def create_content(use_temp_file=False,
     if not stock_info:
         stock_info = get_stock_data(stock_symbol, company_name, stock_market_time)
         save_to_temp_file(stock_info, file_name)
-
+    print("Generating stock opening analysis...")
     result = generate_stock_opening_analysis(stock_info, company_name, stock_symbol)
     return result
 
 
 def get_stock_data(stock_symbol: str, company_name: str, stock_market_time: StockMarketTime) -> str:
-    logging.info("Getting stock data...")
+    print("Getting stock data...")
     price_data = get_price_data(stock_symbol, stock_market_time)
-    logging.info("Getting news data...")
+    print("Getting news data...")
     news_data = get_news_data(company_name, stock_symbol, stock_market_time)
-    logging.info("Preparing output...")
     return f"Stock Data for {company_name} ({stock_symbol}):\n\n" \
            f"Price Data:\n{price_data}\n\n" \
            f"News Data:\n{news_data}"
@@ -88,6 +86,7 @@ def get_news_data(company_name: str, stock_symbol: str, stock_market_time: Stock
 
     text_by_link = asyncio.run(get_text_by_url(urls))
     news_data = ""
+    # TODO - put it in a thread
     for news_item in tqdm(relevant_news):
         link = news_item['link']
         text = text_by_link.get(link)

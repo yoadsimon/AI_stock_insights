@@ -14,6 +14,7 @@ class OpenAIClient():
             project=extra.get('project'),
             api_key=extra.get('api_key')
         )
+
     def generate_text(self, prompt, model="gpt-4o-mini"):
         try:
             response = self.client.chat.completions.create(
@@ -25,7 +26,6 @@ class OpenAIClient():
             print(f"Error: {e}")
             result = None
         return result
-
 
 
 def check_if_article_relevant(text, link, company_name, stock_symbol, client) -> bool:
@@ -85,12 +85,16 @@ def generate_stock_opening_analysis(text, company_name, stock_symbol):
     return results
 
 
-def match_text_to_video(text) -> str:
+def match_text_to_video(text, last_video_name) -> str:
     client = OpenAIClient()
+
+    video_description_map = VIDEO_DESCRIPTION_MAP.copy()
+    if last_video_name:
+        del video_description_map[last_video_name]
 
     prompt = f"""
     You are given a mapping of video descriptions and their corresponding video file names.
-    Here is the video description map: {VIDEO_DESCRIPTION_MAP}
+    Here is the video description map: {video_description_map}
 
     Your task is to analyze the following sentence and find the video whose description from the description map holds the most relevance.
 
@@ -105,6 +109,7 @@ def match_text_to_video(text) -> str:
 
 
 def create_description_youtube_video(text, company_name, stock_symbol, now):
+    print(f"creating description...")
     client = OpenAIClient()
     prompt = (
         f"You are a financial analyst preparing a YouTube video on the latest stock analysis for {company_name} ({stock_symbol})."

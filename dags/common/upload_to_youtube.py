@@ -16,7 +16,7 @@ SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
 
 def authenticate_youtube(conn_id='youtube_api'):
     try:
-        # Retrieve credentials from Airflow connection
+        print("Authenticating with YouTube API...")
         conn = BaseHook.get_connection(conn_id)
         extra = conn.extra_dejson
 
@@ -49,6 +49,7 @@ def authenticate_youtube(conn_id='youtube_api'):
 
 
 def initialize_upload(youtube, options):
+    print("Uploading video to YouTube...")
     tags = options['keywords'].split(',') if options['keywords'] else None
     body = {
         'snippet': {

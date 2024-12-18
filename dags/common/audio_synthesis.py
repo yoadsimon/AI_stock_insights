@@ -24,7 +24,7 @@ def text_to_audio(
         region_name=region_name
     ).client('polly')
 
-    print(f"init aws connection with successfully")
+    print(f"AWS Connection was successful...")
 
     response_audio = polly_client.synthesize_speech(
         Text=text,
@@ -52,6 +52,7 @@ def text_to_audio(
         Engine='neural'
     )
 
+    print(f"Preparing speech marks...")
     if 'AudioStream' in response_marks:
         speech_marks_data = response_marks['AudioStream'].read().decode('utf-8').split('\n')
         speech_marks = [json.loads(mark) for mark in speech_marks_data if mark.strip()]

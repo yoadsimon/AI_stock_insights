@@ -103,13 +103,14 @@ def setup_logging():
 def fix_video_name(name):
     if not name.endswith(".mp4"):
         name += ".mp4"
-    if name not in VIDEO_DESCRIPTION_MAP.values():
+    if name not in VIDEO_DESCRIPTION_MAP.keys():
         name = None
     if not name:
         return random.choice(["Interactive_Trading_Screen.mp4", "Stock_Ticker_Grid.mp4"])
     return name
 
-
+if __name__ == '__main__':
+    fix_video_name(name="Market_Downturn_Graph.mp4")
 # async def test_playwright():
 #     async with async_playwright() as p:
 #         browser = await p.chromium.launch(headless=True)
