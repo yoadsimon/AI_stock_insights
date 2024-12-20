@@ -7,8 +7,21 @@ from tqdm import tqdm
 from common.utils.consts import MARKET_TIME_ZONE
 from common.utils.open_ai import generate_stock_opening_analysis, summarize_with_open_ai
 from common.utils.stock_market_time import StockMarketTime
-from common.utils.utils import read_temp_file, save_to_temp_file, get_text_by_url
+from common.utils.utils import get_text_by_url, save_to_s3, read_from_s3
 
+
+def save_file(data: str, stock_symbol: str, now_date: str,
+              dag_name: str = "daily_stock_analysis",
+              prefix: str = 'data') -> None:
+    file_name = f"{stock_symbol}/{dag_name}/{prefix}/{now_date}"
+    save_to_s3(file_type="txt", file_name=file_name, data=data)
+
+
+def read_file(stock_symbol: str, now_date: str,
+              dag_name: str = "daily_stock_analysis",
+              prefix: str = 'data') -> str:
+    file_name = f"{stock_symbol}/{dag_name}/{prefix}/{now_date}"
+    return read_from_s3(file_name)
 
 
 def create_content(use_temp_file=False,
@@ -17,14 +30,20 @@ def create_content(use_temp_file=False,
                    company_name='NVIDIA Corporation') -> str:
     stock_market_time = StockMarketTime(mock_data_input_now)
     now_date = stock_market_time.now.strftime("%Y-%m-%d")
-    file_name = f"{stock_symbol}_{now_date}"
-    stock_info = read_temp_file(file_name) if use_temp_file else None
+    stock_info = read_file(stock_symbol=stock_symbol,
+                           now_date=now_date) if use_temp_file else None
 
     if not stock_info:
         stock_info = get_stock_data(stock_symbol, company_name, stock_market_time)
-        save_to_temp_file(stock_info, file_name)
+        save_file(data=stock_info,
+                  stock_symbol=stock_symbol,
+                  now_date=now_date)
     print("Generating stock opening analysis...")
     result = generate_stock_opening_analysis(stock_info, company_name, stock_symbol)
+    save_file(data=result,
+              stock_symbol=stock_symbol,
+              now_date=now_date,
+              prefix='generated_result')
     return result
 
 
@@ -78,7 +97,7 @@ def get_news_data(company_name: str, stock_symbol: str, stock_market_time: Stock
             continue
         relevant_news.append(news_item)
         urls.add(url)
-    logging.info(f"Number of relevant news items: {len(relevant_news)}")
+    print(f"Number of relevant news items: {len(relevant_news)}")
     if not relevant_news:
         return (f"No relevant news found for {company_name} "
                 f"between {stock_market_time.last_time_close} and "
@@ -104,3 +123,8 @@ def get_news_data(company_name: str, stock_symbol: str, stock_market_time: Stock
                       f"Summary: {summary.strip()}\n\n")
 
     return news_data
+
+# if __name__ == '__main__':
+#     save_stock_info(stock_info="test",
+#                     stock_symbol="NVDA",
+#                     now_date="2021-09-01")

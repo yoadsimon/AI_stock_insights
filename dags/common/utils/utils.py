@@ -5,6 +5,10 @@ import time
 from playwright.async_api import async_playwright
 from common.inputs.video_map import VIDEO_DESCRIPTION_MAP
 from dotenv import load_dotenv
+import boto3
+from airflow.hooks.base_hook import BaseHook
+import shutil
+from common.utils.consts import BUCKET_NAME
 
 load_dotenv()
 
@@ -67,28 +71,31 @@ async def get_text_by_url(urls):
             await browser.close()
 
 
-def save_to_temp_file(text, name):
-    if not os.path.exists('temp'):
-        os.makedirs('temp')
-    with open(f'temp/{name}.txt', 'w', encoding='utf-8') as file:
-        file.write(text)
+def get_s3_client(conn_id='aws_default'):
+    conn = BaseHook.get_connection(conn_id)
+    extra = conn.extra_dejson or {}
+    aws_access_key_id = conn.login
+    aws_secret_access_key = conn.password
+    region_name = extra.get('region_name', 'us-east-1')
+    s3_client = boto3.Session(
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        region_name=region_name
+    ).client('s3')
+
+    return s3_client
 
 
-def read_temp_file(file_name):
-    if not file_name:
-        return None
-    if 'temp/' not in file_name:
-        file_path = f"temp/{file_name}.txt"
+def save_to_s3(file_name, data, file_type='txt'):
+    s3_client = get_s3_client()
 
-    if "common/" not in file_path:
-        file_path = f"common/{file_path}"
+    s3_client.put_object(Bucket=BUCKET_NAME, Key=f"{file_name}.{file_type}", Body=data)
 
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            content = file.read()
-        return content
 
-    return None
+def read_from_s3(file_name, file_type='txt'):
+    s3_client = get_s3_client()
+    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{file_name}.{file_type}")
+    return response['Body'].read().decode('utf-8')
 
 
 def setup_logging():
@@ -109,14 +116,40 @@ def fix_video_name(name):
         return random.choice(["Interactive_Trading_Screen.mp4", "Stock_Ticker_Grid.mp4"])
     return name
 
-if __name__ == '__main__':
-    fix_video_name(name="Market_Downturn_Graph.mp4")
-# async def test_playwright():
-#     async with async_playwright() as p:
-#         browser = await p.chromium.launch(headless=True)
-#         page = await browser.new_page()
-#         await page.goto('https://playwright.dev')
-#         # returns text form the page
-#         print(await page.title())
-#         await browser.close()
-#     print("Test completed")
+
+def clean_dir(dir_name):
+    if os.path.exists(dir_name) and os.path.isdir(dir_name):
+        for entry in os.listdir(dir_name):
+            entry_path = os.path.join(dir_name, entry)
+            try:
+                if os.path.isfile(entry_path) or os.path.islink(entry_path):
+                    os.unlink(entry_path)
+                elif os.path.isdir(entry_path):
+                    shutil.rmtree(entry_path)
+            except Exception as e:
+                print(f'Failed to delete {entry_path}. Reason: {e}')
+        print(f"All contents of the directory '{dir_name}' have been removed.")
+    else:
+        print(f"The directory '{dir_name}' does not exist.")
+
+# def save_to_temp_file(text, name):
+#     if not os.path.exists('temp'):
+#         os.makedirs('temp')
+#     with open(f'temp/{name}.txt', 'w', encoding='utf-8') as file:
+#         file.write(text)
+#
+# def read_temp_file(file_name):
+#     if not file_name:
+#         return None
+#     if 'temp/' not in file_name:
+#         file_path = f"temp/{file_name}.txt"
+#
+#     if "common/" not in file_path:
+#         file_path = f"common/{file_path}"
+#
+#     if os.path.exists(file_path):
+#         with open(file_path, 'r') as file:
+#             content = file.read()
+#         return content
+#
+#     return None
