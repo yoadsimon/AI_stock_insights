@@ -5,15 +5,17 @@ from common.upload_to_youtube import upload_video_youtube
 from common.utils.consts import MARKET_TIME_ZONE
 from common.utils.open_ai import create_description_youtube_video, match_text_to_video
 import glob
-import logging
 import os
+
+from common.utils.utils import clean_dir
 from common.video_creation import create_video
 from tqdm import tqdm
+
 
 def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corporation', is_mock=False):
     now = datetime.datetime.now(MARKET_TIME_ZONE)
     if is_mock:
-        use_temp_file = False  # Should be True
+        use_temp_file = True  # change to False for testing all the way through
         mock_data_input_now = now.replace(hour=9, minute=0, second=0, microsecond=0)
     else:
         use_temp_file = False
@@ -46,7 +48,7 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
     background_videos_dir = os.path.join(script_dir, "inputs")
     background_videos = glob.glob(os.path.join(background_videos_dir, "*.mp4")) or None
 
-    logging.info("Creating video with text...")
+    print("Creating video with text...")
     create_video(
         audio_path=audio_path,
         video_path=video_path,
@@ -54,7 +56,7 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
         background_videos=background_videos
     )
 
-    logging.info("Uploading video to YouTube...")
+    print("Uploading video to YouTube...")
     upload_video_youtube(
         video_file_path=video_path,
         title=title_youtube,
@@ -64,7 +66,11 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
         privacyStatus='public'
     )
 
-    logging.info("Script finished successfully.")
+    print("Cleaning up...")
+    dir_name = os.path.join(script_dir, "results")
+    clean_dir(dir_name=dir_name)
+
+    print("Script finished successfully.")
 
 # if __name__ == "__main__":
 #     main()
