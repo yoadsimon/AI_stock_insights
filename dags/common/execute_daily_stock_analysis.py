@@ -69,7 +69,7 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
     print("Cleaning up...")
     dir_name = os.path.join(script_dir, "results")
     clean_dir(dir_name=dir_name)
-    
+
     print("Script finished successfully.")
 
 # if __name__ == "__main__":
