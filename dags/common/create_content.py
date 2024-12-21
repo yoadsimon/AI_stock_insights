@@ -1,3 +1,5 @@
+from typing import Optional
+
 import yfinance as yf
 import datetime
 import asyncio
@@ -19,7 +21,8 @@ def save_file(data: str, stock_symbol: str, now_date: str,
 
 def read_file(stock_symbol: str, now_date: str,
               dag_name: str = "daily_stock_analysis",
-              prefix: str = 'data') -> str:
+              prefix: str = 'data') -> Optional[str]:
+    return None
     file_name = f"{stock_symbol}/{dag_name}/{prefix}/{now_date}"
     return read_from_s3(file_name)
 

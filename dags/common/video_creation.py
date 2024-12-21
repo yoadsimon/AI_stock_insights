@@ -114,35 +114,48 @@ def create_video(
         sentences_list_with_timings,
         background_videos,
         disclaimer_video_path,
+        youtube_shorts_video_path,
 ):
     audio = load_audio(audio_path)
-    total_audio_duration = audio.duration
-    background, bg_videos = load_background_clips(background_videos, total_audio_duration, sentences_list_with_timings)
-    clips = generate_text_clips(sentences_list_with_timings)
-    video = CompositeVideoClip([background] + clips) if background else CompositeVideoClip(clips)
-    video = video.set_audio(audio)
+    background_clip, bg_video_clips = load_background_clips(
+        background_videos, audio.duration, sentences_list_with_timings
+    )
+    text_clips = generate_text_clips(sentences_list_with_timings)
+    if background_clip:
+        main_video = CompositeVideoClip([background_clip] + text_clips)
+    else:
+        main_video = CompositeVideoClip(text_clips)
+    main_video = main_video.set_audio(audio)
+    final_main_video = add_disclaimer(main_video, disclaimer_video_path)
+    print("Writing main video...")
+    final_main_video.write_videofile(video_path, fps=24, audio_codec="aac")
 
-    # Add the disclaimer video at the end
-    try:
-        if os.path.exists(disclaimer_video_path):
-            print("Adding disclaimer video...")
-            disclaimer_clip = VideoFileClip(disclaimer_video_path)
-            final_video = concatenate_videoclips([video, disclaimer_clip])
-            disclaimer_clip.close()  # Close the disclaimer clip after concatenation
-        else:
-            print("Disclaimer video not found. Proceeding without it.")
-            final_video = video
-    except Exception as e:
-        print(f"Error loading or concatenating disclaimer video: {e}")
-        final_video = video
-
-    print("Writing video...")
-    final_video.write_videofile(video_path, fps=24, audio_codec="aac")
-
-    # Close all clips
-    final_video.close()
-    if final_video != video:
-        video.close()
+    create_youtube_shorts_video(final_main_video, youtube_shorts_video_path, disclaimer_video_path)
+    final_main_video.close()
+    if final_main_video != main_video:
+        main_video.close()
     audio.close()
-    for bg_video in bg_videos:
-        bg_video.close()
+    if background_clip:
+        background_clip.close()
+    for clip in text_clips:
+        clip.close()
+    for bg_clip in bg_video_clips:
+        bg_clip.close()
+
+
+def add_disclaimer(video, disclaimer_video_path):
+    print("Adding disclaimer video...")
+    with VideoFileClip(disclaimer_video_path) as disclaimer_clip:
+        final_video = concatenate_videoclips([video, disclaimer_clip])
+    return final_video
+
+
+def create_youtube_shorts_video(video, youtube_shorts_video_path, disclaimer_video_path):
+    print("Creating YouTube Shorts video...")
+    shorts_duration = (video.duration - 8) * 0.9
+    shorts_video = video.subclip(0, shorts_duration)
+    final_shorts_video = add_disclaimer(shorts_video, disclaimer_video_path)
+    print("Writing YouTube Shorts video...")
+    final_shorts_video.write_videofile(youtube_shorts_video_path, fps=24, audio_codec="aac")
+    final_shorts_video.close()
+    shorts_video.close()

@@ -69,13 +69,38 @@ def initialize_upload(youtube, options):
             media_body=MediaFileUpload(options['file'], chunksize=-1, resumable=True)
         )
         response = insert_request.execute()
-        logger.info(f"Video uploaded successfully: https://www.youtube.com/watch?v={response['id']}")
+        link = f"https://www.youtube.com/watch?v={response['id']}"
+        print(f"Video uploaded successfully: {link}")
+        return link
     except HttpError as e:
         logger.error(f"An HTTP error {e.resp.status} occurred:\n{e.content}")
         sys.exit(1)
 
 
-def upload_video_youtube(video_file_path, title, description, keywords='', category='22', privacyStatus='public'):
+def upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_video_link):
+    shorts_options = options.copy()
+    shorts_options['file'] = youtube_shorts_video_path
+
+    # Modify title and description to include #shorts and link to the full video
+    shorts_options['title'] = f"{options['title']} #shorts"
+    shorts_options['description'] = f"{options['description']}\n\nWatch the full video here: {full_video_link}\n\n#shorts"
+
+    # Add 'shorts' to keywords to increase visibility
+    shorts_options['keywords'] = options.get('keywords', '') + ',shorts'
+
+    # Upload the Shorts video using the existing initialize_upload function
+    shorts_video_link = initialize_upload(youtube, shorts_options)
+    return shorts_video_link
+
+
+def upload_video_youtube(video_file_path,
+                         title,
+                         description,
+                         youtube_shorts_video_path,
+                         keywords='',
+                         category='22',
+                         privacyStatus='public'
+                         ):
     video_file_path = os.path.abspath(video_file_path)
 
     creds = authenticate_youtube()
@@ -88,4 +113,5 @@ def upload_video_youtube(video_file_path, title, description, keywords='', categ
         'keywords': keywords,
         'privacyStatus': privacyStatus
     }
-    initialize_upload(youtube, options)
+    full_video_link = initialize_upload(youtube, options)
+    upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_video_link)
