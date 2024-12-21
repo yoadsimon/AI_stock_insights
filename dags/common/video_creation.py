@@ -51,7 +51,10 @@ def load_background_clips(background_videos, total_audio_duration, sentences_lis
         clip_duration = min(clip_duration, video_duration)
         if clip_duration <= 0:
             continue
-        # bg_clip = bg_video.subclip(0, clip_duration).resize((640, 480))
+
+        if sentence.get("is_last_sentence") is True:
+            clip_duration += 0.5
+
         bg_clip = resize_video(bg_video, clip_duration, video_name)
         background_clips.append(bg_clip)
         current_duration += clip_duration

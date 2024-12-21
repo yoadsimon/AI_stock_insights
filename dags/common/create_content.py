@@ -25,10 +25,10 @@ def read_file(stock_symbol: str, now_date: str,
 
 
 def create_content(use_temp_file=False,
-                   mock_data_input_now=None,
                    stock_symbol='NVDA',
-                   company_name='NVIDIA Corporation') -> str:
-    stock_market_time = StockMarketTime(mock_data_input_now)
+                   company_name='NVIDIA Corporation',
+                   stock_market_time=None,
+                   ) -> str:
     now_date = stock_market_time.now.strftime("%Y-%m-%d")
     stock_info = read_file(stock_symbol=stock_symbol,
                            now_date=now_date) if use_temp_file else None

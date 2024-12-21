@@ -6,7 +6,6 @@ from pydub import AudioSegment
 from airflow.hooks.base_hook import BaseHook
 
 
-
 def text_to_audio(
         text,
         audio_path="common/results/output_audio.mp3",
@@ -89,6 +88,9 @@ def text_to_audio(
             current_sentence['end'] = audio_duration_ms
             current_sentence['words_in_sentence'] = current_words_in_sentence
             list_of_sentences.append(current_sentence)
+
+        if list_of_sentences:
+            list_of_sentences[-1]["is_last_sentence"] = True
 
         return list_of_sentences
     else:

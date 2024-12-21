@@ -117,7 +117,7 @@ def create_description_youtube_video(text, company_name, stock_symbol, now):
         f"The description should be concise, informative, and provide a preview of the valuable insights shared in the video.\n\n"
         f"Title: {company_name} - {stock_symbol} AI Stock Analysis - {now.strftime('%Y-%m-%d')}\n\n"
         f"Analysis Summary: \n{text}\n\n"
-        f"Please include a disclaimer stating that the video is AI-generated and should not be used for real investment decisions, but only for learning purposes."
+        # f"Please include a disclaimer stating that the video is AI-generated and should not be used for real investment decisions, but only for learning purposes."
     )
     results = client.generate_text(prompt)
     final_description = results + "\n\n" + f"Text of the video:\n {text}"

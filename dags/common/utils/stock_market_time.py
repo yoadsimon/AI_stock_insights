@@ -20,6 +20,7 @@ class StockMarketTime:
         self.next_time_open = self.get_next_market_open_datetime()
         self.last_time_close = self.get_last_market_close_datetime()
         self.next_time_close = self.get_next_market_close_datetime()
+        self.is_next_time_open_today = self.next_time_open.date() == self.now.date()
 
     def is_market_currently_open(self):
         now_time = self.now.time()
