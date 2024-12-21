@@ -40,6 +40,7 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
     script_dir = os.path.dirname(os.path.abspath(__file__))
     audio_path = os.path.join(script_dir, "results/output_audio.mp3")
     video_path = os.path.join(script_dir, "results/output_video.mp4")
+    disclaimer_video_path = os.path.join(script_dir, "results/disclaimer.mp4")
 
     print("Converting text to audio...")
     sentences_list_with_timings = text_to_audio(text, audio_path)
@@ -59,7 +60,8 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
         audio_path=audio_path,
         video_path=video_path,
         sentences_list_with_timings=sentences_list_with_timings,
-        background_videos=background_videos
+        background_videos=background_videos,
+        disclaimer_video_path=disclaimer_video_path
     )
 
     print("Uploading video to YouTube...")

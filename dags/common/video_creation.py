@@ -108,16 +108,41 @@ def generate_text_clips(sentences_list_with_timings):
     return clips
 
 
-def create_video(audio_path, video_path, sentences_list_with_timings, background_videos):
+def create_video(
+        audio_path,
+        video_path,
+        sentences_list_with_timings,
+        background_videos,
+        disclaimer_video_path,
+):
     audio = load_audio(audio_path)
     total_audio_duration = audio.duration
     background, bg_videos = load_background_clips(background_videos, total_audio_duration, sentences_list_with_timings)
     clips = generate_text_clips(sentences_list_with_timings)
     video = CompositeVideoClip([background] + clips) if background else CompositeVideoClip(clips)
-    print("Writing video...")
     video = video.set_audio(audio)
-    video.write_videofile(video_path, fps=24, audio_codec='aac')
-    video.close()
+
+    # Add the disclaimer video at the end
+    try:
+        if os.path.exists(disclaimer_video_path):
+            print("Adding disclaimer video...")
+            disclaimer_clip = VideoFileClip(disclaimer_video_path)
+            final_video = concatenate_videoclips([video, disclaimer_clip])
+            disclaimer_clip.close()  # Close the disclaimer clip after concatenation
+        else:
+            print("Disclaimer video not found. Proceeding without it.")
+            final_video = video
+    except Exception as e:
+        print(f"Error loading or concatenating disclaimer video: {e}")
+        final_video = video
+
+    print("Writing video...")
+    final_video.write_videofile(video_path, fps=24, audio_codec="aac")
+
+    # Close all clips
+    final_video.close()
+    if final_video != video:
+        video.close()
     audio.close()
     for bg_video in bg_videos:
         bg_video.close()
