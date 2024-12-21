@@ -19,7 +19,7 @@ with DAG(
         'daily_stock_analysis',
         default_args=default_args,
         description='Generate stock content and upload to YouTube daily at 9 AM US Eastern Time',
-        schedule_interval='0 9 * * *',
+        schedule_interval='45 8 * * *',
         start_date=pendulum.datetime(2024, 1, 1, tz=local_tz),
         catchup=False,
         max_active_runs=1,
@@ -34,7 +34,8 @@ with DAG(
             stock_symbol = dag_run.conf.get('stock_symbol', "NVDA")
             company_name = dag_run.conf.get('company_name', "NVIDIA Corporation")
             is_mock = dag_run.conf.get('is_mock', True)
-            print(f"Task 'daily_stock_analysis' starts with: stock_symbol={stock_symbol}, company_name={company_name}, is_mock={is_mock}")
+            print(
+                f"Task 'daily_stock_analysis' starts with: stock_symbol={stock_symbol}, company_name={company_name}, is_mock={is_mock}")
             execute_daily_stock_analysis(stock_symbol=stock_symbol, company_name=company_name, is_mock=is_mock)
         except Exception as e:
             print(f"Error: {e}")
