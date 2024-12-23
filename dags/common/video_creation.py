@@ -7,7 +7,7 @@ from moviepy.editor import (
     concatenate_videoclips,
     CompositeVideoClip,
 )
-
+import ffmpeg
 
 DESIRED_WIDTH, DESIRED_HEIGHT = 1920, 1080
 
