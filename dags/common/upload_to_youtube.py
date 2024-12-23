@@ -105,7 +105,7 @@ def upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_vide
 def upload_video_youtube(video_file_path,
                          title,
                          description,
-                         youtube_shorts_video_path,
+                         youtube_shorts_video_path=None,
                          keywords='',
                          category='22',
                          is_mock=False
@@ -124,4 +124,5 @@ def upload_video_youtube(video_file_path,
         'privacyStatus': privacyStatus
     }
     full_video_link = initialize_upload(youtube, options)
-    upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_video_link)
+    if youtube_shorts_video_path:
+        upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_video_link)

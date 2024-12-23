@@ -7,7 +7,7 @@ from moviepy.editor import (
     concatenate_videoclips,
     CompositeVideoClip,
 )
-import ffmpeg
+
 
 DESIRED_WIDTH, DESIRED_HEIGHT = 1920, 1080
 
@@ -118,6 +118,11 @@ def add_disclaimer(video, disclaimer_video_path):
 
 
 def create_youtube_shorts_video(full_video_path, shorts_video_path, disclaimer_video_path):
+    try:
+        import ffmpeg
+    except ImportError:
+        print("Please install the 'ffmpeg' package to create YouTube Shorts videos.")
+        shorts_video_path = None
     probe = ffmpeg.probe(full_video_path)
     duration = float(probe['format']['duration'])
     trimmed_duration = duration - 7
