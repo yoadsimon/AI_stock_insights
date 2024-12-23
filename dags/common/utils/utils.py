@@ -16,7 +16,7 @@ chromium_versions = [d for d in os.listdir(browsers_path) if d.startswith('chrom
 if not chromium_versions:
     raise Exception(f"No Chromium versions found in {browsers_path}")
 chromium_version = chromium_versions[0]
-if os.environ["LOCAL"]:
+if os.environ.get("LOCAL"):
     executable_path = os.path.join(browsers_path, chromium_version, 'chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium')
 else:
     executable_path = os.path.join(browsers_path, chromium_version, 'chrome-linux', 'chrome')
@@ -74,7 +74,7 @@ async def get_text_by_url(urls):
 
 
 def get_s3_client(conn_id='aws_default'):
-    if os.environ["LOCAL"]:
+    if os.environ.get("LOCAL"):
         aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
         aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
         region_name = os.getenv('AWS_REGION_NAME', 'us-east-1')

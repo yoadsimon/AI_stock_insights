@@ -12,7 +12,7 @@ def text_to_audio(
         audio_path="common/results/output_audio.mp3",
         conn_id='aws_default'
 ):
-    if os.environ["LOCAL"]:
+    if os.environ.get("LOCAL"):
         aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
         aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
         region_name = os.getenv('AWS_REGION_NAME', 'us-east-1')

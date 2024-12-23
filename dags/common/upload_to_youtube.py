@@ -19,7 +19,7 @@ SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
 def authenticate_youtube(conn_id='youtube_api'):
     try:
         print("Authenticating with YouTube API...")
-        if os.environ["LOCAL"]:
+        if os.environ.get("LOCAL"):
             client_id = os.getenv('client_id')
             client_secret = os.getenv('client_secret')
             refresh_token = os.getenv('refresh_token')

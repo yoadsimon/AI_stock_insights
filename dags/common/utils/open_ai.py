@@ -10,7 +10,7 @@ load_dotenv()
 
 class OpenAIClient():
     def __init__(self, conn_id='openai_default'):
-        if os.environ["LOCAL"]:
+        if os.environ.get("LOCAL"):
             organization = os.getenv('OPEN_AI_ORGANIZATION_ID')
             project = os.getenv('OPEN_AI_PROJECT_ID')
             api_key = os.getenv('OPEN_AI_TOKEN')
