@@ -124,5 +124,5 @@ def upload_video_youtube(video_file_path,
         'privacyStatus': privacyStatus
     }
     full_video_link = initialize_upload(youtube, options)
-    if youtube_shorts_video_path:
+    if youtube_shorts_video_path and os.path.exists(youtube_shorts_video_path):
         upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_video_link)
