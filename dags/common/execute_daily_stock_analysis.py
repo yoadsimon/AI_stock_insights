@@ -28,13 +28,17 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
         return
 
     print(f"Creating content...")
-    text = create_content(use_temp_file=use_temp_file,
-                          stock_symbol=stock_symbol,
-                          company_name=company_name,
-                          stock_market_time=stock_market_time)
+    # text = create_content(use_temp_file=use_temp_file,
+    #                       stock_symbol=stock_symbol,
+    #                       company_name=company_name,
+    #                       stock_market_time=stock_market_time)
+    text = "this is a test.\nlets see what the future holds.\nok? are you ready? lets go!"
     title_youtube = f"{company_name} - {stock_symbol} AI Stock Analysis - {now.strftime('%Y-%m-%d')}"
     description_youtube = create_description_youtube_video(text=text, company_name=company_name,
                                                            stock_symbol=stock_symbol, now=now)
+
+    print(f"title_youtube:\n{title_youtube}")
+    print(f"description_youtube:\n{description_youtube}")
     text = text.replace("*", "").replace('"', "'")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -67,19 +71,19 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
     )
 
     print("Uploading video to YouTube...")
-    upload_video_youtube(
-        video_file_path=video_path,
-        title=title_youtube,
-        description=description_youtube,
-        youtube_shorts_video_path=youtube_shorts_video_path,
-        keywords='finance,stock market,AI',
-        category='22',
-        privacyStatus='public'
-    )
+    # upload_video_youtube(
+    #     video_file_path=video_path,
+    #     title=title_youtube,
+    #     description=description_youtube,
+    #     youtube_shorts_video_path=youtube_shorts_video_path,
+    #     keywords='finance,stock market,AI',
+    #     category='22',
+    #     is_mock=is_mock
+    # )
 
     print("Cleaning up...")
-    dir_name = os.path.join(script_dir, "results")
-    clean_dir(dir_name=dir_name)
+    # dir_name = os.path.join(script_dir, "results")
+    # clean_dir(dir_name=dir_name)
 
     print("Script finished successfully.")
 

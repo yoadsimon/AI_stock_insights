@@ -108,8 +108,9 @@ def upload_video_youtube(video_file_path,
                          youtube_shorts_video_path,
                          keywords='',
                          category='22',
-                         privacyStatus='public'
+                         is_mock=False
                          ):
+    privacyStatus = 'public' if not is_mock else 'private'
     video_file_path = os.path.abspath(video_file_path)
 
     creds = authenticate_youtube()

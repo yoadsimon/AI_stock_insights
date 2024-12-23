@@ -93,18 +93,15 @@ def generate_text_clips(sentences_list_with_timings):
             word = timing['word']
             start_time_in_seconds = timing['start'] / 1000.0
             duration = (timing['end'] - timing['start']) / 1000.0
-
             text_clip = TextClip(
                 word,
-                fontsize=140,
+                fontsize=160,
                 color='white',
                 stroke_color='black',
-                stroke_width=3,
+                stroke_width=6,
                 font='Arial-Bold',
-                size=(DESIRED_WIDTH, DESIRED_HEIGHT),
                 method='caption'
-            ).set_start(start_time_in_seconds).set_duration(duration).set_pos('center')
-
+            ).set_start(start_time_in_seconds).set_duration(duration).set_position('center')
             clips.append(text_clip)
     return clips
 
@@ -118,8 +115,6 @@ def add_disclaimer(video, disclaimer_video_path):
     else:
         print("Disclaimer video not found. Proceeding without it.")
         return video, None
-
-
 
 
 def create_youtube_shorts_video(full_video_path, shorts_video_path, disclaimer_video_path):
@@ -171,6 +166,7 @@ def create_youtube_shorts_video(full_video_path, shorts_video_path, disclaimer_v
         ).global_args('-loglevel', 'error').overwrite_output()
         out.run()
     print(f"YouTube Shorts video created at {shorts_video_path}")
+
 
 def create_video(
         audio_path,
