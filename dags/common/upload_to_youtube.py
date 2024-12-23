@@ -48,7 +48,7 @@ def authenticate_youtube(conn_id='youtube_api'):
         sys.exit(1)
 
 
-def initialize_upload(youtube, options):
+def initialize_upload(youtube, options, is_short=False):
     print("Uploading video to YouTube...")
     tags = options['keywords'].split(',') if options['keywords'] else None
     body = {
@@ -62,6 +62,8 @@ def initialize_upload(youtube, options):
             'privacyStatus': options['privacyStatus']
         }
     }
+    if is_short:
+        body['videoType'] = 'SHORT'
     try:
         insert_request = youtube.videos().insert(
             part=",".join(body.keys()),
@@ -69,13 +71,35 @@ def initialize_upload(youtube, options):
             media_body=MediaFileUpload(options['file'], chunksize=-1, resumable=True)
         )
         response = insert_request.execute()
-        logger.info(f"Video uploaded successfully: https://www.youtube.com/watch?v={response['id']}")
+        link = f"https://www.youtube.com/watch?v={response['id']}"
+        print(f"Video uploaded successfully: {link}")
+        return link
     except HttpError as e:
         logger.error(f"An HTTP error {e.resp.status} occurred:\n{e.content}")
         sys.exit(1)
 
 
-def upload_video_youtube(video_file_path, title, description, keywords='', category='22', privacyStatus='public'):
+def upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_video_link):
+    shorts_options = options.copy()
+    shorts_options['file'] = youtube_shorts_video_path
+
+    shorts_options['title'] = f"{options['title']} #shorts"
+    shorts_options['description'] = (f"This is only a part from the real video - watch the full video here:\n"
+                                     f"{full_video_link}\n\n#shorts")
+    shorts_options['keywords'] = options.get('keywords', '') + ',shorts'
+
+    shorts_video_link = initialize_upload(youtube, shorts_options, is_short=True)
+    return shorts_video_link
+
+
+def upload_video_youtube(video_file_path,
+                         title,
+                         description,
+                         youtube_shorts_video_path,
+                         keywords='',
+                         category='22',
+                         privacyStatus='public'
+                         ):
     video_file_path = os.path.abspath(video_file_path)
 
     creds = authenticate_youtube()
@@ -88,4 +112,5 @@ def upload_video_youtube(video_file_path, title, description, keywords='', categ
         'keywords': keywords,
         'privacyStatus': privacyStatus
     }
-    initialize_upload(youtube, options)
+    full_video_link = initialize_upload(youtube, options)
+    upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_video_link)

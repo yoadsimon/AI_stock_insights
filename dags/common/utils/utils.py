@@ -122,13 +122,15 @@ def clean_dir(dir_name):
         for entry in os.listdir(dir_name):
             entry_path = os.path.join(dir_name, entry)
             try:
+                if entry == "disclaimer_video.mp4":
+                    continue
                 if os.path.isfile(entry_path) or os.path.islink(entry_path):
                     os.unlink(entry_path)
                 elif os.path.isdir(entry_path):
                     shutil.rmtree(entry_path)
             except Exception as e:
                 print(f'Failed to delete {entry_path}. Reason: {e}')
-        print(f"All contents of the directory '{dir_name}' have been removed.")
+        print(f"All contents of the directory '{dir_name}' have been removed, except 'disclaimer_video.mp4'.")
     else:
         print(f"The directory '{dir_name}' does not exist.")
 

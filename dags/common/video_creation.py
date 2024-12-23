@@ -1,6 +1,12 @@
 import os
 
-from moviepy.editor import AudioFileClip, VideoFileClip, TextClip, concatenate_videoclips, CompositeVideoClip
+from moviepy.editor import (
+    AudioFileClip,
+    VideoFileClip,
+    TextClip,
+    concatenate_videoclips,
+    CompositeVideoClip,
+)
 
 DESIRED_WIDTH, DESIRED_HEIGHT = 1920, 1080
 
@@ -29,11 +35,9 @@ def load_background_clips(background_videos, total_audio_duration, sentences_lis
         return None, []
     script_dir = os.path.dirname(os.path.abspath(__file__))
     inputs_dir = os.path.join(script_dir, 'inputs')
-
     background_clips = []
     bg_videos = []
     current_duration = 0
-
     print(f"Creating background clips...")
     for sentence in sentences_list_with_timings:
         video_name = sentence['video_name']
@@ -51,11 +55,11 @@ def load_background_clips(background_videos, total_audio_duration, sentences_lis
         clip_duration = min(clip_duration, video_duration)
         if clip_duration <= 0:
             continue
-        # bg_clip = bg_video.subclip(0, clip_duration).resize((640, 480))
+        if sentence.get("is_last_sentence") is True:
+            clip_duration += 0.5
         bg_clip = resize_video(bg_video, clip_duration, video_name)
         background_clips.append(bg_clip)
         current_duration += clip_duration
-
     while current_duration < total_audio_duration:
         video_name = "Interactive_Trading_Screen.mp4"
         file_name = os.path.join(inputs_dir, video_name)
@@ -69,7 +73,6 @@ def load_background_clips(background_videos, total_audio_duration, sentences_lis
         bg_clip = resize_video(bg_video, clip_duration, video_name)
         background_clips.append(bg_clip)
         current_duration += clip_duration
-
     if background_clips:
         try:
             concatenated_background = concatenate_videoclips(background_clips)
@@ -105,16 +108,79 @@ def generate_text_clips(sentences_list_with_timings):
     return clips
 
 
-def create_video(audio_path, video_path, sentences_list_with_timings, background_videos):
+def add_disclaimer(video, disclaimer_video_path):
+    print("Adding disclaimer video...")
+    if os.path.exists(disclaimer_video_path):
+        disclaimer_clip = VideoFileClip(disclaimer_video_path)
+        final_video = concatenate_videoclips([video, disclaimer_clip], method="compose")
+        return final_video, disclaimer_clip
+    else:
+        print("Disclaimer video not found. Proceeding without it.")
+        return video, None
+
+
+def create_youtube_shorts_video(video, youtube_shorts_video_path, disclaimer_video_path):
+    print("Creating YouTube Shorts video...")
+
+    SHORTS_DESIRED_WIDTH, SHORTS_DESIRED_HEIGHT = 1080, 1920
+
+    shorts_duration = min(53, video.duration * 0.9)
+    shorts_video = video.subclip(0, shorts_duration)
+
+    shorts_video = shorts_video.resize(width=SHORTS_DESIRED_WIDTH)
+
+    if shorts_video.h > SHORTS_DESIRED_HEIGHT:
+        y_center = shorts_video.h / 2
+        shorts_video = shorts_video.crop(
+            width=SHORTS_DESIRED_WIDTH,
+            height=SHORTS_DESIRED_HEIGHT,
+            x_center=SHORTS_DESIRED_WIDTH / 2,
+            y_center=y_center
+        )
+
+    final_shorts_video, disclaimer_clip = add_disclaimer(shorts_video, disclaimer_video_path)
+    print("Writing YouTube Shorts video...")
+    final_shorts_video.write_videofile(youtube_shorts_video_path, fps=24, audio_codec="aac")
+
+    # Close clips
+    final_shorts_video.close()
+    shorts_video.close()
+    if disclaimer_clip:
+        disclaimer_clip.close()
+
+
+def create_video(
+        audio_path,
+        video_path,
+        sentences_list_with_timings,
+        background_videos,
+        disclaimer_video_path,
+        youtube_shorts_video_path,
+):
     audio = load_audio(audio_path)
-    total_audio_duration = audio.duration
-    background, bg_videos = load_background_clips(background_videos, total_audio_duration, sentences_list_with_timings)
-    clips = generate_text_clips(sentences_list_with_timings)
-    video = CompositeVideoClip([background] + clips) if background else CompositeVideoClip(clips)
-    print("Writing video...")
-    video = video.set_audio(audio)
-    video.write_videofile(video_path, fps=24, audio_codec='aac')
-    video.close()
+    background_clip, bg_video_clips = load_background_clips(
+        background_videos, audio.duration, sentences_list_with_timings
+    )
+    text_clips = generate_text_clips(sentences_list_with_timings)
+    if background_clip:
+        main_video = CompositeVideoClip([background_clip] + text_clips)
+    else:
+        main_video = CompositeVideoClip(text_clips)
+    main_video = main_video.set_audio(audio)
+    final_main_video, disclaimer_clip = add_disclaimer(main_video, disclaimer_video_path)
+    print("Writing main video...")
+    final_main_video.write_videofile(video_path, fps=24, audio_codec="aac")
+    if disclaimer_clip:
+        disclaimer_clip.close()
+    # Create YouTube Shorts video
+    create_youtube_shorts_video(final_main_video, youtube_shorts_video_path, disclaimer_video_path)
+    # Close clips
+    final_main_video.close()
+    main_video.close()
     audio.close()
-    for bg_video in bg_videos:
-        bg_video.close()
+    if background_clip:
+        background_clip.close()
+    for clip in text_clips:
+        clip.close()
+    for bg_clip in bg_video_clips:
+        bg_clip.close()

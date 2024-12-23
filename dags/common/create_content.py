@@ -1,3 +1,5 @@
+from typing import Optional
+
 import yfinance as yf
 import datetime
 import asyncio
@@ -19,16 +21,17 @@ def save_file(data: str, stock_symbol: str, now_date: str,
 
 def read_file(stock_symbol: str, now_date: str,
               dag_name: str = "daily_stock_analysis",
-              prefix: str = 'data') -> str:
+              prefix: str = 'data') -> Optional[str]:
+    return None
     file_name = f"{stock_symbol}/{dag_name}/{prefix}/{now_date}"
     return read_from_s3(file_name)
 
 
 def create_content(use_temp_file=False,
-                   mock_data_input_now=None,
                    stock_symbol='NVDA',
-                   company_name='NVIDIA Corporation') -> str:
-    stock_market_time = StockMarketTime(mock_data_input_now)
+                   company_name='NVIDIA Corporation',
+                   stock_market_time=None,
+                   ) -> str:
     now_date = stock_market_time.now.strftime("%Y-%m-%d")
     stock_info = read_file(stock_symbol=stock_symbol,
                            now_date=now_date) if use_temp_file else None

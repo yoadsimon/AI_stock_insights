@@ -7,6 +7,7 @@ from common.utils.open_ai import create_description_youtube_video, match_text_to
 import glob
 import os
 
+from common.utils.stock_market_time import StockMarketTime
 from common.utils.utils import clean_dir
 from common.video_creation import create_video
 from tqdm import tqdm
@@ -20,12 +21,17 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
     else:
         use_temp_file = False
         mock_data_input_now = None
+    stock_market_time = StockMarketTime(mock_data_input_now)
+
+    if not is_mock and not stock_market_time.is_next_time_open_today:
+        print("Market Won't Open Today, Exiting...")
+        return
 
     print(f"Creating content...")
     text = create_content(use_temp_file=use_temp_file,
-                          mock_data_input_now=mock_data_input_now,
                           stock_symbol=stock_symbol,
-                          company_name=company_name)
+                          company_name=company_name,
+                          stock_market_time=stock_market_time)
     title_youtube = f"{company_name} - {stock_symbol} AI Stock Analysis - {now.strftime('%Y-%m-%d')}"
     description_youtube = create_description_youtube_video(text=text, company_name=company_name,
                                                            stock_symbol=stock_symbol, now=now)
@@ -34,6 +40,8 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
     script_dir = os.path.dirname(os.path.abspath(__file__))
     audio_path = os.path.join(script_dir, "results/output_audio.mp3")
     video_path = os.path.join(script_dir, "results/output_video.mp4")
+    youtube_shorts_video_path = os.path.join(script_dir, "results/youtube_shorts_output_video.mp4")
+    disclaimer_video_path = os.path.join(script_dir, "results/disclaimer_video.mp4")
 
     print("Converting text to audio...")
     sentences_list_with_timings = text_to_audio(text, audio_path)
@@ -53,7 +61,9 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
         audio_path=audio_path,
         video_path=video_path,
         sentences_list_with_timings=sentences_list_with_timings,
-        background_videos=background_videos
+        background_videos=background_videos,
+        disclaimer_video_path=disclaimer_video_path,
+        youtube_shorts_video_path=youtube_shorts_video_path
     )
 
     print("Uploading video to YouTube...")
@@ -61,6 +71,7 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
         video_file_path=video_path,
         title=title_youtube,
         description=description_youtube,
+        youtube_shorts_video_path=youtube_shorts_video_path,
         keywords='finance,stock market,AI',
         category='22',
         privacyStatus='public'

@@ -2,6 +2,7 @@ from airflow.hooks.base_hook import BaseHook
 from openai import OpenAI
 
 from common.inputs.video_map import VIDEO_DESCRIPTION_MAP
+from common.utils.consts import DISCLAIMER_VIDEO_TEXT
 from common.utils.utils import fix_video_name
 
 
@@ -116,7 +117,7 @@ def create_description_youtube_video(text, company_name, stock_symbol, now):
         f"Your task is to write a compelling and engaging description that highlights the key points of the analysis and entices viewers to watch the video. "
         f"The description should be concise, informative, and provide a preview of the valuable insights shared in the video.\n\n"
         f"Title: {company_name} - {stock_symbol} AI Stock Analysis - {now.strftime('%Y-%m-%d')}\n\n"
-        f"Analysis Summary: \n{text}\n\n"
+        f"Analysis Summary: \n{text}\n{DISCLAIMER_VIDEO_TEXT}\n\n"
         f"Please include a disclaimer stating that the video is AI-generated and should not be used for real investment decisions, but only for learning purposes."
     )
     results = client.generate_text(prompt)

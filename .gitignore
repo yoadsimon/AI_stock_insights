@@ -86,8 +86,7 @@ __pycache__/
 dags/**/__pycache__/
 dags/**/*.py[cod]
 
-# Results and temporary files
-dags/common/results/
+
 dags/common/temp/
 dags/common/*.mp4
 dags/common/*.mp3
