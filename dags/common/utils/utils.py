@@ -6,7 +6,6 @@ from playwright.async_api import async_playwright
 from common.inputs.video_map import VIDEO_DESCRIPTION_MAP
 from dotenv import load_dotenv
 import boto3
-from airflow.hooks.base_hook import BaseHook
 import shutil
 from common.utils.consts import BUCKET_NAME
 
@@ -17,7 +16,10 @@ chromium_versions = [d for d in os.listdir(browsers_path) if d.startswith('chrom
 if not chromium_versions:
     raise Exception(f"No Chromium versions found in {browsers_path}")
 chromium_version = chromium_versions[0]
-executable_path = os.path.join(browsers_path, chromium_version, 'chrome-linux', 'chrome')
+if os.environ["LOCAL"]:
+    executable_path = os.path.join(browsers_path, chromium_version, 'chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium')
+else:
+    executable_path = os.path.join(browsers_path, chromium_version, 'chrome-linux', 'chrome')
 if not os.path.exists(executable_path):
     raise FileNotFoundError(f"Chromium executable not found at {executable_path}")
 
@@ -72,11 +74,17 @@ async def get_text_by_url(urls):
 
 
 def get_s3_client(conn_id='aws_default'):
-    conn = BaseHook.get_connection(conn_id)
-    extra = conn.extra_dejson or {}
-    aws_access_key_id = conn.login
-    aws_secret_access_key = conn.password
-    region_name = extra.get('region_name', 'us-east-1')
+    if os.environ["LOCAL"]:
+        aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+        aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name = os.getenv('AWS_REGION_NAME', 'us-east-1')
+    else:
+        from airflow.hooks.base_hook import BaseHook
+        conn = BaseHook.get_connection(conn_id)
+        extra = conn.extra_dejson or {}
+        aws_access_key_id = conn.login
+        aws_secret_access_key = conn.password
+        region_name = extra.get('region_name', 'us-east-1')
     s3_client = boto3.Session(
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
@@ -94,7 +102,11 @@ def save_to_s3(file_name, data, file_type='txt'):
 
 def read_from_s3(file_name, file_type='txt'):
     s3_client = get_s3_client()
-    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{file_name}.{file_type}")
+    try:
+        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{file_name}.{file_type}")
+    except Exception as e:
+        print(f"File {file_name}.{file_type} not found in S3\n: {e}")
+        return None
     return response['Body'].read().decode('utf-8')
 
 

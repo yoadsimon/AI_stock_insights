@@ -12,3 +12,5 @@ google-api-python-client
 google-auth
 google-auth-oauthlib
 Pillow==9.5.0
+ffmpeg-python
+imageio_ffmpeg

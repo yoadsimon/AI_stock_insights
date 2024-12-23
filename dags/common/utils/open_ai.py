@@ -1,19 +1,30 @@
-from airflow.hooks.base_hook import BaseHook
+import os
 from openai import OpenAI
-
 from common.inputs.video_map import VIDEO_DESCRIPTION_MAP
 from common.utils.consts import DISCLAIMER_VIDEO_TEXT
 from common.utils.utils import fix_video_name
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class OpenAIClient():
     def __init__(self, conn_id='openai_default'):
-        conn = BaseHook.get_connection(conn_id)
-        extra = conn.extra_dejson
+        if os.environ["LOCAL"]:
+            organization = os.getenv('OPEN_AI_ORGANIZATION_ID')
+            project = os.getenv('OPEN_AI_PROJECT_ID')
+            api_key = os.getenv('OPEN_AI_TOKEN')
+        else:
+            from airflow.hooks.base_hook import BaseHook
+            conn = BaseHook.get_connection(conn_id)
+            extra = conn.extra_dejson
+            organization = extra.get('organization'),
+            project = extra.get('project'),
+            api_key = extra.get('api_key')
         self.client = OpenAI(
-            organization=extra.get('organization'),
-            project=extra.get('project'),
-            api_key=extra.get('api_key')
+            organization=organization,
+            project=project,
+            api_key=api_key
         )
 
     def generate_text(self, prompt, model="gpt-4o-mini"):

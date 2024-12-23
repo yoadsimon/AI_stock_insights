@@ -7,6 +7,7 @@ from moviepy.editor import (
     concatenate_videoclips,
     CompositeVideoClip,
 )
+import ffmpeg
 
 DESIRED_WIDTH, DESIRED_HEIGHT = 1920, 1080
 
@@ -92,18 +93,15 @@ def generate_text_clips(sentences_list_with_timings):
             word = timing['word']
             start_time_in_seconds = timing['start'] / 1000.0
             duration = (timing['end'] - timing['start']) / 1000.0
-
             text_clip = TextClip(
                 word,
-                fontsize=140,
+                fontsize=160,
                 color='white',
                 stroke_color='black',
-                stroke_width=3,
+                stroke_width=6,
                 font='Arial-Bold',
-                size=(DESIRED_WIDTH, DESIRED_HEIGHT),
                 method='caption'
-            ).set_start(start_time_in_seconds).set_duration(duration).set_pos('center')
-
+            ).set_start(start_time_in_seconds).set_duration(duration).set_position('center')
             clips.append(text_clip)
     return clips
 
@@ -119,34 +117,55 @@ def add_disclaimer(video, disclaimer_video_path):
         return video, None
 
 
-def create_youtube_shorts_video(video, youtube_shorts_video_path, disclaimer_video_path):
-    print("Creating YouTube Shorts video...")
-
+def create_youtube_shorts_video(full_video_path, shorts_video_path, disclaimer_video_path):
+    probe = ffmpeg.probe(full_video_path)
+    duration = float(probe['format']['duration'])
+    trimmed_duration = duration - 7
+    if trimmed_duration <= 0:
+        trimmed_duration = duration
+    trimmed_duration *= 0.8
+    print(f"Creating YouTube Shorts video of duration {trimmed_duration:.2f} seconds...")
     SHORTS_DESIRED_WIDTH, SHORTS_DESIRED_HEIGHT = 1080, 1920
 
-    shorts_duration = min(43, video.duration * 0.8)
-    shorts_video = video.subclip(0, shorts_duration)
-
-    shorts_video = shorts_video.resize(width=SHORTS_DESIRED_WIDTH)
-
-    if shorts_video.h > SHORTS_DESIRED_HEIGHT:
-        y_center = shorts_video.h / 2
-        shorts_video = shorts_video.crop(
-            width=SHORTS_DESIRED_WIDTH,
-            height=SHORTS_DESIRED_HEIGHT,
-            x_center=SHORTS_DESIRED_WIDTH / 2,
-            y_center=y_center
+    def process_input(video_input):
+        # Scale the original video to fit the width, maintaining aspect ratio
+        scaled_video = video_input.video.filter('scale', SHORTS_DESIRED_WIDTH, -1)
+        # Create a blurred background by scaling and blurring the original video
+        blurred_bg = (
+            video_input.video
+            .filter('scale', SHORTS_DESIRED_WIDTH, SHORTS_DESIRED_HEIGHT)
+            .filter('boxblur', luma_radius=10, luma_power=1)
         )
+        # Overlay the scaled video onto the blurred background, centered vertically
+        overlaid = ffmpeg.overlay(blurred_bg, scaled_video, x=0, y='(H-h)/2')
+        return overlaid
 
-    final_shorts_video, disclaimer_clip = add_disclaimer(shorts_video, disclaimer_video_path)
-    print("Writing YouTube Shorts video...")
-    final_shorts_video.write_videofile(youtube_shorts_video_path, fps=24, audio_codec="aac")
-
-    # Close clips
-    final_shorts_video.close()
-    shorts_video.close()
-    if disclaimer_clip:
-        disclaimer_clip.close()
+    if os.path.exists(disclaimer_video_path):
+        print("Disclaimer video found, processing with disclaimer.")
+        in1 = ffmpeg.input(full_video_path, ss=0, t=trimmed_duration)
+        in2 = ffmpeg.input(disclaimer_video_path)
+        v1 = process_input(in1)
+        v2 = process_input(in2)
+        a1 = in1.audio
+        a2 = in2.audio
+        v_concat = ffmpeg.concat(v1, v2, v=1, a=0).node
+        a_concat = ffmpeg.concat(a1, a2, v=0, a=1).node
+        out = ffmpeg.output(
+            v_concat[0], a_concat[0], shorts_video_path,
+            vcodec='libx264', acodec='aac', strict='experimental'
+        ).global_args('-loglevel', 'error').overwrite_output()
+        out.run()
+    else:
+        print("Disclaimer video not found. Proceeding without it.")
+        in1 = ffmpeg.input(full_video_path, ss=0, t=trimmed_duration)
+        v1 = process_input(in1)
+        a1 = in1.audio
+        out = ffmpeg.output(
+            v1, a1, shorts_video_path,
+            vcodec='libx264', acodec='aac', strict='experimental'
+        ).global_args('-loglevel', 'error').overwrite_output()
+        out.run()
+    print(f"YouTube Shorts video created at {shorts_video_path}")
 
 
 def create_video(
@@ -167,17 +186,12 @@ def create_video(
     else:
         main_video = CompositeVideoClip(text_clips)
     main_video = main_video.set_audio(audio)
-
-    # **Create YouTube Shorts video before closing any clips**
-    create_youtube_shorts_video(main_video, youtube_shorts_video_path, disclaimer_video_path)
-
     final_main_video, disclaimer_clip = add_disclaimer(main_video, disclaimer_video_path)
     print("Writing main video...")
     final_main_video.write_videofile(video_path, fps=24, audio_codec="aac")
     if disclaimer_clip:
         disclaimer_clip.close()
 
-    # **Now it's safe to close the clips**
     final_main_video.close()
     main_video.close()
     audio.close()
@@ -187,3 +201,5 @@ def create_video(
         clip.close()
     for bg_clip in bg_video_clips:
         bg_clip.close()
+
+    create_youtube_shorts_video(video_path, youtube_shorts_video_path, disclaimer_video_path)

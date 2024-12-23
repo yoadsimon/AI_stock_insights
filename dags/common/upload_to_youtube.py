@@ -1,13 +1,15 @@
 import os
 import sys
 import logging
-from airflow.hooks.base import BaseHook
+
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
+from dotenv import load_dotenv
 
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -17,14 +19,22 @@ SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
 def authenticate_youtube(conn_id='youtube_api'):
     try:
         print("Authenticating with YouTube API...")
-        conn = BaseHook.get_connection(conn_id)
-        extra = conn.extra_dejson
+        if os.environ["LOCAL"]:
+            client_id = os.getenv('client_id')
+            client_secret = os.getenv('client_secret')
+            refresh_token = os.getenv('refresh_token')
+            access_token = os.getenv('access_token')
+            token_uri = os.getenv('token_uri', "https://oauth2.googleapis.com/token")
+        else:
+            from airflow.hooks.base_hook import BaseHook
+            conn = BaseHook.get_connection(conn_id)
+            extra = conn.extra_dejson
+            client_id = extra.get('client_id')
+            client_secret = extra.get('client_secret')
+            refresh_token = extra.get('refresh_token')
+            access_token = extra.get('access_token')
+            token_uri = extra.get('token_uri', "https://oauth2.googleapis.com/token")
 
-        client_id = extra.get('client_id')
-        client_secret = extra.get('client_secret')
-        refresh_token = extra.get('refresh_token')
-        access_token = extra.get('access_token')
-        token_uri = extra.get('token_uri', "https://oauth2.googleapis.com/token")
         if not client_id or not client_secret or not refresh_token:
             logger.error('Missing YouTube API credentials.')
             sys.exit(1)
@@ -98,8 +108,9 @@ def upload_video_youtube(video_file_path,
                          youtube_shorts_video_path,
                          keywords='',
                          category='22',
-                         privacyStatus='public'
+                         is_mock=False
                          ):
+    privacyStatus = 'public' if not is_mock else 'private'
     video_file_path = os.path.abspath(video_file_path)
 
     creds = authenticate_youtube()

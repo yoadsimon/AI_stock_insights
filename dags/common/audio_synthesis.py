@@ -1,9 +1,10 @@
 import os
-
 import boto3
 import json
 from pydub import AudioSegment
-from airflow.hooks.base_hook import BaseHook
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def text_to_audio(
@@ -11,11 +12,17 @@ def text_to_audio(
         audio_path="common/results/output_audio.mp3",
         conn_id='aws_default'
 ):
-    conn = BaseHook.get_connection(conn_id)
-    extra = conn.extra_dejson or {}
-    aws_access_key_id = conn.login
-    aws_secret_access_key = conn.password
-    region_name = extra.get('region_name', 'us-east-1')
+    if os.environ["LOCAL"]:
+        aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+        aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+        region_name = os.getenv('AWS_REGION_NAME', 'us-east-1')
+    else:
+        from airflow.hooks.base_hook import BaseHook
+        conn = BaseHook.get_connection(conn_id)
+        extra = conn.extra_dejson or {}
+        aws_access_key_id = conn.login
+        aws_secret_access_key = conn.password
+        region_name = extra.get('region_name', 'us-east-1')
 
     polly_client = boto3.Session(
         aws_access_key_id=aws_access_key_id,
