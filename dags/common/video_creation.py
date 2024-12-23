@@ -124,7 +124,7 @@ def create_youtube_shorts_video(video, youtube_shorts_video_path, disclaimer_vid
 
     SHORTS_DESIRED_WIDTH, SHORTS_DESIRED_HEIGHT = 1080, 1920
 
-    shorts_duration = min(53, video.duration * 0.9)
+    shorts_duration = min(43, video.duration * 0.8)
     shorts_video = video.subclip(0, shorts_duration)
 
     shorts_video = shorts_video.resize(width=SHORTS_DESIRED_WIDTH)
@@ -167,14 +167,17 @@ def create_video(
     else:
         main_video = CompositeVideoClip(text_clips)
     main_video = main_video.set_audio(audio)
+
+    # **Create YouTube Shorts video before closing any clips**
+    create_youtube_shorts_video(main_video, youtube_shorts_video_path, disclaimer_video_path)
+
     final_main_video, disclaimer_clip = add_disclaimer(main_video, disclaimer_video_path)
     print("Writing main video...")
     final_main_video.write_videofile(video_path, fps=24, audio_codec="aac")
     if disclaimer_clip:
         disclaimer_clip.close()
-    # Create YouTube Shorts video
-    create_youtube_shorts_video(final_main_video, youtube_shorts_video_path, disclaimer_video_path)
-    # Close clips
+
+    # **Now it's safe to close the clips**
     final_main_video.close()
     main_video.close()
     audio.close()
