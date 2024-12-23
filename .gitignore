@@ -118,3 +118,4 @@ Thumbs.db
 /dags/common/inputs/
 dags/common/inputs/
 /dags/local/
+/.env_local
