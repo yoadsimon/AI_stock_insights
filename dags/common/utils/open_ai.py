@@ -18,8 +18,8 @@ class OpenAIClient():
             from airflow.hooks.base_hook import BaseHook
             conn = BaseHook.get_connection(conn_id)
             extra = conn.extra_dejson
-            organization = extra.get('organization'),
-            project = extra.get('project'),
+            organization = extra.get('organization')
+            project = extra.get('project')
             api_key = extra.get('api_key')
         self.client = OpenAI(
             organization=organization,
