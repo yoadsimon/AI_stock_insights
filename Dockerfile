@@ -31,8 +31,7 @@ RUN apt-get update && \
         gsfonts && \
     rm -rf /var/lib/apt/lists/* \
 
-RUN pip install ffmpeg-python imageio_ffmpeg
-
 # Adjust ImageMagick policy.xml to allow text rendering (if necessary)
 RUN sed -i 's/rights="none"/rights="read|write"/g' /etc/ImageMagick-6/policy.xml
 USER airflow
+RUN pip install ffmpeg-python imageio_ffmpeg
