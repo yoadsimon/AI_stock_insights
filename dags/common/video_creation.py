@@ -123,6 +123,7 @@ def create_youtube_shorts_video(full_video_path, shorts_video_path, disclaimer_v
     except ImportError:
         print("Please install the 'ffmpeg' package to create YouTube Shorts videos.")
         shorts_video_path = None
+        return None
     probe = ffmpeg.probe(full_video_path)
     duration = float(probe['format']['duration'])
     trimmed_duration = duration - 7
