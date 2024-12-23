@@ -102,7 +102,11 @@ def save_to_s3(file_name, data, file_type='txt'):
 
 def read_from_s3(file_name, file_type='txt'):
     s3_client = get_s3_client()
-    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{file_name}.{file_type}")
+    try:
+        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{file_name}.{file_type}")
+    except Exception as e:
+        print(f"File {file_name}.{file_type} not found in S3\n: {e}")
+        return None
     return response['Body'].read().decode('utf-8')
 
 
