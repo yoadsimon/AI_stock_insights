@@ -36,8 +36,8 @@ def execute_daily_stock_analysis(stock_symbol='NVDA', company_name='NVIDIA Corpo
     description_youtube = create_description_youtube_video(text=text, company_name=company_name,
                                                            stock_symbol=stock_symbol, now=now)
 
-    print(f"title_youtube:\n{title_youtube}")
-    print(f"description_youtube:\n{description_youtube}")
+    # print(f"title_youtube:\n{title_youtube}")
+    # print(f"description_youtube:\n{description_youtube}")
     text = text.replace("*", "").replace('"', "'")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
