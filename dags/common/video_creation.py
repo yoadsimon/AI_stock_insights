@@ -121,11 +121,27 @@ def add_disclaimer(video, disclaimer_video_path):
 
 def create_youtube_shorts_video(video, youtube_shorts_video_path, disclaimer_video_path):
     print("Creating YouTube Shorts video...")
+
+    SHORTS_DESIRED_WIDTH, SHORTS_DESIRED_HEIGHT = 1080, 1920
+
     shorts_duration = min(53, video.duration * 0.9)
     shorts_video = video.subclip(0, shorts_duration)
+
+    shorts_video = shorts_video.resize(width=SHORTS_DESIRED_WIDTH)
+
+    if shorts_video.h > SHORTS_DESIRED_HEIGHT:
+        y_center = shorts_video.h / 2
+        shorts_video = shorts_video.crop(
+            width=SHORTS_DESIRED_WIDTH,
+            height=SHORTS_DESIRED_HEIGHT,
+            x_center=SHORTS_DESIRED_WIDTH / 2,
+            y_center=y_center
+        )
+
     final_shorts_video, disclaimer_clip = add_disclaimer(shorts_video, disclaimer_video_path)
     print("Writing YouTube Shorts video...")
     final_shorts_video.write_videofile(youtube_shorts_video_path, fps=24, audio_codec="aac")
+
     # Close clips
     final_shorts_video.close()
     shorts_video.close()

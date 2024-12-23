@@ -48,7 +48,7 @@ def authenticate_youtube(conn_id='youtube_api'):
         sys.exit(1)
 
 
-def initialize_upload(youtube, options):
+def initialize_upload(youtube, options, is_short=False):
     print("Uploading video to YouTube...")
     tags = options['keywords'].split(',') if options['keywords'] else None
     body = {
@@ -62,6 +62,8 @@ def initialize_upload(youtube, options):
             'privacyStatus': options['privacyStatus']
         }
     }
+    if is_short:
+        body['videoType'] = 'SHORT'
     try:
         insert_request = youtube.videos().insert(
             part=",".join(body.keys()),
@@ -81,15 +83,12 @@ def upload_youtube_shorts(youtube, options, youtube_shorts_video_path, full_vide
     shorts_options = options.copy()
     shorts_options['file'] = youtube_shorts_video_path
 
-    # Modify title and description to include #shorts and link to the full video
     shorts_options['title'] = f"{options['title']} #shorts"
-    shorts_options['description'] = f"{options['description']}\n\nWatch the full video here: {full_video_link}\n\n#shorts"
-
-    # Add 'shorts' to keywords to increase visibility
+    shorts_options['description'] = (f"This is only a part from the real video - watch the full video here:\n"
+                                     f"{full_video_link}\n\n#shorts")
     shorts_options['keywords'] = options.get('keywords', '') + ',shorts'
 
-    # Upload the Shorts video using the existing initialize_upload function
-    shorts_video_link = initialize_upload(youtube, shorts_options)
+    shorts_video_link = initialize_upload(youtube, shorts_options, is_short=True)
     return shorts_video_link
 
 

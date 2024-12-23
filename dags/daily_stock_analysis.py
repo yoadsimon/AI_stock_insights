@@ -33,9 +33,9 @@ with DAG(
             dag_run = context['dag_run']
             stock_symbol = dag_run.conf.get('stock_symbol', "NVDA")
             company_name = dag_run.conf.get('company_name', "NVIDIA Corporation")
-            is_mock = dag_run.conf.get('is_mock', True)
-            print(
-                f"Task 'daily_stock_analysis' starts with: stock_symbol={stock_symbol}, company_name={company_name}, is_mock={is_mock}")
+            is_mock = dag_run.conf.get('is_mock', False)
+            print(f"Task 'daily_stock_analysis' starts with:"
+                  f" stock_symbol={stock_symbol}, company_name={company_name}, is_mock={is_mock}")
             execute_daily_stock_analysis(stock_symbol=stock_symbol, company_name=company_name, is_mock=is_mock)
         except Exception as e:
             print(f"Error: {e}")
