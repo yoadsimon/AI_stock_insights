@@ -89,10 +89,10 @@ def get_news_data(company_name: str, stock_symbol: str, stock_market_time: Stock
     relevant_news = []
     urls = set()
     for news_item in tqdm(news):
-        published_timestamp = news_item['providerPublishTime']
         if 'providerPublishTime' not in news_item:
             print(f"^%^%: Warning: 'providerPublishTime' not found in news_item: {news_item}")
-            continue  
+            continue
+        published_timestamp = news_item['providerPublishTime']
         published_time = datetime.datetime.fromtimestamp(published_timestamp, MARKET_TIME_ZONE)
         if not stock_market_time.is_mock and not (
                 stock_market_time.last_time_close < published_time < stock_market_time.next_time_open):
