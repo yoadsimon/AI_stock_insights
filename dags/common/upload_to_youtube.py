@@ -72,8 +72,8 @@ def initialize_upload(youtube, options, is_short=False):
             'privacyStatus': options['privacyStatus']
         }
     }
-    if is_short:
-        body['videoType'] = 'SHORT'
+    # if is_short:
+    #     body['videoType'] = 'SHORT'
     try:
         insert_request = youtube.videos().insert(
             part=",".join(body.keys()),
